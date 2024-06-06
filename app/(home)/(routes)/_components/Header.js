@@ -1,9 +1,12 @@
+import useAuth from "@/app/_hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { AlignJustifyIcon, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 function Header({ setShowMenu, showMenu }) {
-  const user = false;
+  const { userInfo, logOut } = useAuth();
+  const router = useRouter();
 
   return (
     <div className="md:ml-64 p-6 border-b flex justify-between items-center">
@@ -16,10 +19,15 @@ function Header({ setShowMenu, showMenu }) {
         )}
         <h2 className="font-medium">Learn Technology</h2>
       </div>
-      {user ? (
-        <User />
+      {userInfo ? (
+        <User onClick={logOut} />
       ) : (
-        <Button className="text-white rounded-full">Get Started</Button>
+        <Button
+          onClick={() => router.push("/sign-in")}
+          className="text-white rounded-full"
+        >
+          Get Started
+        </Button>
       )}
     </div>
   );
