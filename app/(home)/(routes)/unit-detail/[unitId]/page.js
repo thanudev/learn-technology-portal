@@ -12,7 +12,9 @@ import useAuth from "@/app/_hooks/useAuth";
 import { LikeContext } from "@/app/_context/LikeContext";
 import BottomSection from "./components/BottomSection";
 import RightSection from "./components/RightSection";
-import { EnrollmentContext } from "@/app/_context/EnrollmentContext";
+import { LoadContext } from "@/app/_context/LoadContext";
+import Lottie from "lottie-react";
+import Loading from "../../../../../public/loading.json";
 
 function UnitDetails({ params }) {
   const [unit, setUnit] = useState();
@@ -20,19 +22,22 @@ function UnitDetails({ params }) {
   const { userInfo } = useAuth();
   const router = useRouter();
   const [enrollment, setEnrollment] = useState(null);
+  const [load, setLoad] = useState(false);
 
   useLayoutEffect(() => {
     if (!userInfo) {
       router.push("/sign-in");
+    } else {
+      router.refresh();
     }
   }, [userInfo]);
 
   useLayoutEffect(() => {
-    GetUnitEnrolledOrNot();
+    params?.unitId && GetUnitEnrolledOrNot();
 
     params?.unitId && GetSubjectUnitById(params?.unitId);
     GetLikes(params?.unitId);
-  }, [enrollment, userInfo]);
+  }, [enrollment, userInfo, params]);
 
   const GetSubjectUnitById = async (id) => {
     getSubjectUnitById(id).then((response) => {
@@ -49,18 +54,23 @@ function UnitDetails({ params }) {
   };
 
   const GetUnitEnrolledOrNot = async () => {
-    await getUnitEnrollment(userInfo?.email, unit?.id).then(async (resp) => {
-      if (resp?.enrollments[0]?.subjectUnitId) {
-        await setEnrollment(resp?.enrollments[0]?.subjectUnitId === unit?.id);
+    setLoad(true);
+    getUnitEnrollment(userInfo?.email, unit?.id).then(async (resp) => {
+      // console.log(resp?.enrollments);
+      if (resp?.enrollments[0]?.subjectUnitId === params?.unitId) {
+        setEnrollment(resp?.enrollments[0]);
+        setLoad(false);
       } else {
-        setEnrollment(false);
+        setEnrollment([]);
+        setLoad(false);
       }
     });
+    setLoad(false);
   };
 
-  return (
-    <LikeContext.Provider value={{ likedEmails, setLikedEmails }}>
-      <EnrollmentContext.Provider value={{ enrollment, setEnrollment }}>
+  return !load ? (
+    <LoadContext.Provider value={{ load, setLoad }}>
+      <LikeContext.Provider value={{ likedEmails, setLikedEmails }}>
         <div>
           <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="col-span-2">
@@ -73,6 +83,7 @@ function UnitDetails({ params }) {
                 }}
               />
               <BottomSection
+                // enrollment={enrollment}
                 reviews={unit?.reviews}
                 unitId={params?.unitId}
                 getUpdatedData={() => {
@@ -83,6 +94,10 @@ function UnitDetails({ params }) {
             </div>
             <div>
               <RightSection
+                enrollment={enrollment}
+                setEnrollment={setEnrollment}
+                load={load}
+                setLoad={setLoad}
                 unitId={unit?.id}
                 getUpdatedData={() => {
                   GetUnitEnrolledOrNot();
@@ -92,8 +107,16 @@ function UnitDetails({ params }) {
             </div>
           </div>
         </div>
-      </EnrollmentContext.Provider>
-    </LikeContext.Provider>
+      </LikeContext.Provider>
+    </LoadContext.Provider>
+  ) : (
+    <div className="flex items-center justify-center h-full w-full mt-20">
+      <Lottie
+        className="h-[200px] w-[200px]"
+        animationData={Loading}
+        loop={true}
+      />
+    </div>
   );
 }
 

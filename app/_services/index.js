@@ -319,6 +319,162 @@ const getUnitEnrollment = async (email, unitId) => {
   return response;
 };
 
+const getUserCompletedChapterWithEmailAndUnit = async (unitId, email) => {
+  const query =
+    gql`
+  query MyQuery {
+    enrollments(
+      where: {subjectUnitId: "` +
+    unitId +
+    `", userEmail: "` +
+    email +
+    `"}
+    ) {
+      id
+      userEmail
+      subjectUnitId
+      completedChapters {
+        ... on CompletedChapter {
+          id
+          chapterId
+        }
+      }
+    }
+  }
+  
+  `;
+  try {
+    const response = await request(MASTER_URL, query);
+    return response;
+  } catch (error) {
+    return null;
+  }
+};
+
+const updateCompletedChapter = async (enrollmentId, chapterID) => {
+  const query =
+    gql`
+    mutation MyMutation {
+      updateEnrollment(
+        where: { id: "` +
+    enrollmentId +
+    `" }
+        data: {
+          completedChapters: {
+            create: { CompletedChapter: { data: { chapterId: "` +
+    chapterID +
+    `" } } }
+          }
+        }
+      ) {
+        id
+      }
+      publishManyEnrollmentsConnection {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await request(MASTER_URL, query);
+    return response;
+  } catch (error) {
+    return null;
+  }
+};
+
+const createUser = async (email, uid, points, image, uname) => {
+  const query =
+    gql`
+  mutation MyMutation {
+    createUserInformation(
+      data: {email: "` +
+    email +
+    `", name: "` +
+    uname +
+    `", points: ` +
+    points +
+    `, profilePicture: "` +
+    image +
+    `", uid: "` +
+    uid +
+    `"}
+    ) {
+      id
+    }
+    publishManyUserInformationsConnection {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+  
+  `;
+  try {
+    const response = await request(MASTER_URL, query);
+    return response;
+  } catch (error) {
+    return null;
+  }
+};
+
+const updatePoints = async (email, points) => {
+  const query =
+    gql`query MyQuery {
+      userInformation(where: {email: "` +
+    email +
+    `"}) {
+        points
+      }
+    }
+    
+  `;
+
+  const response = await request(MASTER_URL, query);
+
+  try {
+    if (response?.userInformation?.points) {
+      const total = response?.userInformation?.points + points;
+      const mutation =
+        gql`mutation MyMutation {
+          updateUserInformation(
+            data: {points: ` +
+        points +
+        `}
+            where: {email: "` +
+        email +
+        `"}
+          ) {
+            id
+          }
+          publishManyUserInformationsConnection {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+        
+  `;
+      const result = await request(MASTER_URL, mutation);
+      if (result) {
+        return result;
+      } else {
+        return null;
+      }
+    }
+  } catch (error) {
+    return null;
+  }
+};
+
 export {
   getAllCategorySubjects,
   getAllSubjectUnits,
@@ -329,4 +485,8 @@ export {
   addReview,
   purchaseUnit,
   getUnitEnrollment,
+  getUserCompletedChapterWithEmailAndUnit,
+  updateCompletedChapter,
+  createUser,
+  updatePoints,
 };

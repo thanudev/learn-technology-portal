@@ -8,6 +8,7 @@ import {
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createUser } from "../_services";
 
 const AuthContext = createContext();
 
@@ -45,6 +46,15 @@ export const AuthProvider = ({ children }) => {
     const provider = new GoogleAuthProvider();
     const { user } = await signInWithPopup(auth, provider);
     if (user) {
+      await createUser(
+        user?.email,
+        user.uid,
+        10,
+        user?.photoURL,
+        user.displayName
+      ).then((resp) => {
+        console.log(resp);
+      });
       await localStorage.setItem("#user", JSON.stringify(user));
       router.push("/");
     }
