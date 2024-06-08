@@ -4,7 +4,7 @@ import { addReview } from "@/app/_services";
 import { Button } from "@/components/ui/button";
 import React, { useContext, useState } from "react";
 
-function BottomSection({ reviews, unitId, getUpdatedData, enrollment }) {
+function BottomSection({ reviews, unitId, getUpdatedData, userEnrolledUnit }) {
   const { userInfo } = useAuth();
 
   const [review, setReview] = useState("");
@@ -27,7 +27,7 @@ function BottomSection({ reviews, unitId, getUpdatedData, enrollment }) {
   return (
     <div className="p-2 border rounded-md mt-2 ">
       <h2 className="text-gray-900 my-2">Reviews</h2>
-      {enrollment?.subjectUnitId && (
+      {userEnrolledUnit?.length !== 0 && (
         <div className="flex gap-2 border rounded-md p-4">
           <input
             value={review}

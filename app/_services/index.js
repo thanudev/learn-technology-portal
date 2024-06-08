@@ -359,7 +359,7 @@ const updateCompletedChapter = async (enrollmentId, chapterID) => {
         where: { id: "` +
     enrollmentId +
     `" }
-        data: {
+        data: { 
           completedChapters: {
             create: { CompletedChapter: { data: { chapterId: "` +
     chapterID +

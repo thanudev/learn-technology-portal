@@ -13,39 +13,24 @@ import React, { useContext, useEffect, useState } from "react";
 function ChapterContent({
   showNav,
   setShowNav,
-  completedChapters,
+
   loading,
-  setLoading,
-  enrollmentId,
-  getChapters,
+  enrollment,
+
+  UpdateHandler,
 }) {
   const { activeChapter, setActiveChapter } = useContext(ChapterContentContext);
   const { userInfo } = useAuth();
 
-  useEffect(() => {
-    getChapters();
-  }, [activeChapter]);
-
-  const UpdateHandler = async (id) => {
-    setLoading(true);
-
-    enrollmentId &&
-      updateCompletedChapter(enrollmentId, id)
-        .then(async (resp) => {
-          if (resp) {
-            await updatePoints(
-              userInfo?.email,
-              parseInt(activeChapter?.content?.text?.length / 100)
-            ).then((response) => {
-              if (response) {
-                getChapters();
-              }
-            });
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+  const checkIsChapterCompleted = (chapterId) => {
+    if (enrollment?.completedChapters?.length <= 0) {
+      return false;
+    }
+    const resp = enrollment?.completedChapters?.find(
+      (item, index) => item?.chapterId === chapterId
+    );
+    console.log(resp);
+    return resp;
   };
 
   return (
@@ -69,7 +54,7 @@ function ChapterContent({
       ></div>
 
       <div className="flex mb-10 mt-8 items-center justify-between border  p-2 my-40">
-        {completedChapters?.includes(activeChapter?.id) ? (
+        {checkIsChapterCompleted(activeChapter?.id) ? (
           <h2 className="line-through font-medium text-gray-500">
             Completed {activeChapter?.chapterTitle}
           </h2>
@@ -79,7 +64,7 @@ function ChapterContent({
           </h2>
         )}
 
-        {completedChapters?.includes(activeChapter?.id) ? (
+        {checkIsChapterCompleted(activeChapter?.id) ? (
           <button
             disabled={true}
             className="px-7 bg-gray-500 py-3 bg-primary text-white rounded-md hover:bg-gray-900 cursor-pointer"

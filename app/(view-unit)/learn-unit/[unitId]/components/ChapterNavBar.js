@@ -4,9 +4,20 @@ import { ChapterContentContext } from "@/app/_context/ChapterContentContext";
 import { PauseCircle, PlayCircle } from "lucide-react";
 import React, { useContext, useState } from "react";
 
-function ChapterNavBar({ unit, closeNav, endedChapters }) {
+function ChapterNavBar({ unit, closeNav, enrollment }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const { activeChapter, setActiveChapter } = useContext(ChapterContentContext);
+
+  const checkIsChapterCompleted = (chapterId) => {
+    if (enrollment?.completedChapters?.length <= 0) {
+      return false;
+    }
+    const resp = enrollment?.completedChapters?.find(
+      (item, index) => item?.chapterId === chapterId
+    );
+    console.log(resp);
+    return resp;
+  };
 
   return (
     unit && (
@@ -34,7 +45,7 @@ function ChapterNavBar({ unit, closeNav, endedChapters }) {
               >
                 <h2
                   className={`font-semibold ${
-                    endedChapters?.includes(chapter?.id) ? "line-through" : null
+                    checkIsChapterCompleted(chapter?.id) ? "line-through" : null
                   } `}
                 >
                   {index + 1}.{chapter?.chapterTitle}

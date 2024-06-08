@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 function LearnUnit({ params }) {
   const { userInfo } = useAuth();
-  const [completedChapters, setCompletedChapters] = useState([]);
+  const [enrollment, setEnrollment] = useState();
   const [enrollmentId, setEnrollmentId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -58,13 +58,33 @@ function LearnUnit({ params }) {
         .then((response) => {
           !response?.enrollments[0]?.id && router.push("/sign-in");
           setEnrollmentId(response?.enrollments[0]?.id);
-          response?.enrollments[0]?.completedChapters?.map((item, index) => {
-            setCompletedChapters((curr) => [...curr, item?.chapterId]);
-          });
+          setEnrollment(response?.enrollments[0]);
         })
         .finally(() => {
           setLoading(false);
         }));
+  };
+
+  const UpdateHandler = async (id) => {
+    setLoading(true);
+
+    enrollmentId &&
+      updateCompletedChapter(enrollmentId, id)
+        .then(async (resp) => {
+          if (resp) {
+            await updatePoints(
+              userInfo?.email,
+              parseInt(activeChapter?.content?.text?.length / 100)
+            ).then((response) => {
+              if (response) {
+                getChapters();
+              }
+            });
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
   };
 
   return (
@@ -75,11 +95,11 @@ function LearnUnit({ params }) {
           <ChapterNavBar
             unit={unit}
             closeNav={() => setSideMenu(false)}
-            endedChapters={completedChapters}
+            enrollment={enrollment}
           />
         </div>
 
-        {sideMenu && (
+        {/* {sideMenu && (
           <div className="md:flex xl:flex lg:flex  w-72 h-screen border-r sm:flex  z-50 ">
             <ChapterNavBar
               unit={unit}
@@ -87,17 +107,15 @@ function LearnUnit({ params }) {
               endedChapters={completedChapters}
             />
           </div>
-        )}
+        )} */}
         {/* Chapter Content */}
         <div className="h-screen  w-screen m-2 rounded-md p-2">
           <ChapterContent
             showNav={sideMenu}
             setShowNav={setSideMenu}
-            completedChapters={completedChapters}
             loading={loading}
-            setLoading={setLoading}
-            enrollmentId={enrollmentId}
-            getChapters={getChapters}
+            enrollment={enrollment}
+            UpdateHandler={UpdateHandler}
           />
         </div>
       </div>

@@ -4,6 +4,7 @@ import {
   getLikes,
   getSubjectUnitById,
   getUnitEnrollment,
+  purchaseUnit,
 } from "@/app/_services";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useLayoutEffect, useState } from "react";
@@ -21,7 +22,7 @@ function UnitDetails({ params }) {
   const [likedEmails, setLikedEmails] = useState([]);
   const { userInfo } = useAuth();
   const router = useRouter();
-  const [enrollment, setEnrollment] = useState(null);
+  const [userEnrolledUnit, setUserEnrolledUnit] = useState([]);
   const [load, setLoad] = useState(false);
 
   useLayoutEffect(() => {
@@ -33,11 +34,12 @@ function UnitDetails({ params }) {
   }, [userInfo]);
 
   useLayoutEffect(() => {
-    params?.unitId && GetUnitEnrolledOrNot();
-
     params?.unitId && GetSubjectUnitById(params?.unitId);
+    params?.unitId && UserEnrollSubjectUnit();
     GetLikes(params?.unitId);
-  }, [enrollment, userInfo, params]);
+  }, [params?.unitId, userInfo]);
+
+  useLayoutEffect(() => {}, []);
 
   const GetSubjectUnitById = async (id) => {
     getSubjectUnitById(id).then((response) => {
@@ -53,70 +55,59 @@ function UnitDetails({ params }) {
     });
   };
 
-  const GetUnitEnrolledOrNot = async () => {
+  const EnrollCourse = async () => {
     setLoad(true);
-    getUnitEnrollment(userInfo?.email, unit?.id).then(async (resp) => {
-      // console.log(resp?.enrollments);
-      if (resp?.enrollments[0]?.subjectUnitId === params?.unitId) {
-        setEnrollment(resp?.enrollments[0]);
-        setLoad(false);
-      } else {
-        setEnrollment([]);
-        setLoad(false);
+    await purchaseUnit(params?.unitId, userInfo?.email).then((resp) => {
+      if (resp) {
+        UserEnrollSubjectUnit();
       }
     });
     setLoad(false);
   };
 
-  return !load ? (
-    <LoadContext.Provider value={{ load, setLoad }}>
-      <LikeContext.Provider value={{ likedEmails, setLikedEmails }}>
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-3">
-            <div className="col-span-2">
-              <LeftSection
-                unit={unit}
-                getLikes={() => GetLikes(params?.id)}
-                getUpdatedData={() => {
-                  GetSubjectUnitById(params?.unitId);
-                  GetLikes(params?.unitId);
-                }}
-              />
-              <BottomSection
-                // enrollment={enrollment}
-                reviews={unit?.reviews}
-                unitId={params?.unitId}
-                getUpdatedData={() => {
-                  GetSubjectUnitById(params?.unitId);
-                  GetLikes(params?.unitId);
-                }}
-              />
-            </div>
-            <div>
-              <RightSection
-                enrollment={enrollment}
-                setEnrollment={setEnrollment}
-                load={load}
-                setLoad={setLoad}
-                unitId={unit?.id}
-                getUpdatedData={() => {
-                  GetUnitEnrolledOrNot();
-                  GetLikes(params?.unitId);
-                }}
-              />
-            </div>
+  const UserEnrollSubjectUnit = () => {
+    setLoad(true);
+    getUnitEnrollment(userInfo?.email, params?.unitId).then((resp) => {
+      setUserEnrolledUnit(resp?.enrollments);
+      router.push("/learn-unit/" + params?.unitId);
+    });
+    setLoad(false);
+  };
+
+  return (
+    <LikeContext.Provider value={{ likedEmails, setLikedEmails }}>
+      <div>
+        <div className="grid grid-cols-1 md:grid-cols-3">
+          <div className="col-span-2">
+            <LeftSection
+              unit={unit}
+              getLikes={() => GetLikes(params?.id)}
+              getUpdatedData={() => {
+                GetSubjectUnitById(params?.unitId);
+                GetLikes(params?.unitId);
+              }}
+            />
+            <BottomSection
+              userEnrolledUnit={userEnrolledUnit}
+              reviews={unit?.reviews}
+              unitId={params?.unitId}
+              getUpdatedData={() => {
+                GetSubjectUnitById(params?.unitId);
+                GetLikes(params?.unitId);
+              }}
+            />
+          </div>
+          <div>
+            <RightSection
+              EnrollCourse={EnrollCourse}
+              unit={unit}
+              userEnrolledUnit={userEnrolledUnit}
+              load={load}
+            />
           </div>
         </div>
-      </LikeContext.Provider>
-    </LoadContext.Provider>
-  ) : (
-    <div className="flex items-center justify-center h-full w-full mt-20">
-      <Lottie
-        className="h-[200px] w-[200px]"
-        animationData={Loading}
-        loop={true}
-      />
-    </div>
+      </div>
+    </LikeContext.Provider>
   );
 }
 
