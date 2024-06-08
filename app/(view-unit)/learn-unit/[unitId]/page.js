@@ -99,15 +99,15 @@ function LearnUnit({ params }) {
           />
         </div>
 
-        {/* {sideMenu && (
+        {sideMenu && (
           <div className="md:flex xl:flex lg:flex  w-72 h-screen border-r sm:flex  z-50 ">
             <ChapterNavBar
               unit={unit}
               closeNav={() => setSideMenu(false)}
-              endedChapters={completedChapters}
+              enrollment={enrollment}
             />
           </div>
-        )} */}
+        )}
         {/* Chapter Content */}
         <div className="h-screen  w-screen m-2 rounded-md p-2">
           <ChapterContent
