@@ -60,6 +60,7 @@ function UnitDetails({ params }) {
     await purchaseUnit(params?.unitId, userInfo?.email).then((resp) => {
       if (resp) {
         UserEnrollSubjectUnit();
+        router.push("/learn-unit/" + params?.unitId);
       }
     });
     setLoad(false);
@@ -69,7 +70,6 @@ function UnitDetails({ params }) {
     setLoad(true);
     getUnitEnrollment(userInfo?.email, params?.unitId).then((resp) => {
       setUserEnrolledUnit(resp?.enrollments);
-      router.push("/learn-unit/" + params?.unitId);
     });
     setLoad(false);
   };
